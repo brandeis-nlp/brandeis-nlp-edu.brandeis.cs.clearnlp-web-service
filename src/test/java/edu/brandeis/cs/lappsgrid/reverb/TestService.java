@@ -31,7 +31,7 @@ public class TestService {
         return container;
     }
 
-    protected Container reconstructPayload(String json) {
+    Container reconstructPayload(String json) {
         Container cont = new Container(
                 (Map) Serializer.parse(json, Data.class).getPayload());
         // TODO 151022 this will be redundant when @context stuff sorted out
@@ -39,7 +39,7 @@ public class TestService {
         return cont;
     }
 
-    public ServiceMetadata testCommonMetadata() {
+    ServiceMetadata testCommonMetadata() {
         System.out.println(service.getMetadata());
         String json = service.getMetadata();
         assertNotNull(service.getClass().getName() + ".getMetadata() returned null", json);

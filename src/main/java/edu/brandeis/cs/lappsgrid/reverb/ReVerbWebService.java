@@ -43,15 +43,13 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
 )
 public class ReVerbWebService implements WebService {
 
-    protected static final Logger log
-            = LoggerFactory.getLogger(ReVerbWebService.class);
-
+    private static final Logger log = LoggerFactory.getLogger(ReVerbWebService.class);
     private String metadata;
 
     /**
      * Default constructor.
-     * By default, initiating any service will load up the tokenizer for English
-     * and distributional semantics model, which will be used globally.
+     * Only loads up metadata json file.
+     * These json files are generated from @annotation of this class by mvn compilation
      */
     public ReVerbWebService() {
         try {
@@ -62,7 +60,8 @@ public class ReVerbWebService implements WebService {
     }
 
     /**
-     * Get version from metadata
+     * Get version fro POM.
+     * The trick is version.properties file copied and expanded during compilation
      */
     protected String getVersion() {
         String path = "/version.properties";
@@ -81,16 +80,15 @@ public class ReVerbWebService implements WebService {
 
     /**
      * Generates a LEDS json with error message.
-     * @param message
-     * @return
      */
-    protected String errorLEDS(String message) {
+    private String errorLEDS(String message) {
         return new Data<>(Uri.ERROR, message).asJson();
     }
 
     @Override
     /**
-     * This is default execute: takes a json, wrap it as a LIF, run modules
+     * This is default execute: takes a json string, wrap it as a LIF,
+     * run real execute() with the LIF container
      */
     public String execute(String input) {
 
@@ -100,7 +98,7 @@ public class ReVerbWebService implements WebService {
         }
         Data leds;
         leds = Serializer.parse(input, Data.class);
-        // Serializer will catch any json exception and return null in that case
+        // Serializer will catch any json exception and return null if parsing fails
         if (leds ==  null) {
             leds = new Data();
             leds.setDiscriminator(Uri.TEXT);
@@ -142,69 +140,61 @@ public class ReVerbWebService implements WebService {
         }
     }
 
-    /**
-     * This will be overridden for each module
-     * TODO 151103 need a specific exception class
-     */
-    public String execute(Container json) throws Exception {
+    private String execute(Container lif) throws Exception {
 
-        String inputText = json.getText();
-        log.info("Loading sentence splitter && chunker");
-        ChunkedSentenceReader sentReader = DefaultObjects.getDefaultSentenceReader(new StringReader(inputText));
+        String inputText = lif.getText();
+        if (inputText.length() > 0) {
+            log.info("Loading sentence splitter && chunker");
+            ChunkedSentenceReader sentReader = DefaultObjects.getDefaultSentenceReader(new StringReader(inputText));
+            log.info("Done!");
 
-        log.info("Loading relation extractor");
-        ReVerbExtractor reverb = new ReVerbExtractor();
+            log.info("Loading relation extractor");
+            log.info("Done!");
 
-        View view = json.newView();
+            View view = lif.newView();
 
-        String serviceName = this.getClass().getName();
-        view.addContains(Uri.TOKEN, String.format("%s:%s", serviceName, getVersion()),
-                "tokenized:reverb");
+            String serviceName = this.getClass().getName();
+            view.addContains(Uri.TOKEN, String.format("%s:%s", serviceName, getVersion()),
+                    "tokenization:reverb");
 
-        int sid = 1;
-        for (ChunkedSentence sent : sentReader.getSentences()) {
-            int tid = 1;
-            int mid = 1;
-            int rid = 1;
-            List<int[]> tokenSpans = addTokenAnnotations(sent, sid, view);
+            int sidx = 1;
+            for (ChunkedSentence sent : sentReader.getSentences()) {
+//            if (!view.contains(Uri.TOKEN)) {
+//            }
+                int midx = 1;
+                int ridx = 1;
+                List<int[]> tokenSpans = addTokenAnnotations(sent, sidx, view);
 
-            // TODO: 2016-05-19 01:19:38EDT  By using ConfidenceFunction, we can filter out low-confident relations. Should we?
-            Iterator<ChunkedBinaryExtraction> extracted = hasRelation(reverb, view, serviceName, sent);
-            
-            while (extracted.hasNext()) {
-                ChunkedBinaryExtraction extr = extracted.next();
-                ChunkedExtraction rel = extr.getRelation();
-                String relMid = addMarkbleAnnotation(sid, mid++, tokenSpans, rel, view);
-                String arg1Mid = addMarkbleAnnotation(sid, mid++, tokenSpans, extr.getArgument1(), view);
-                String arg2Mid = addMarkbleAnnotation(sid, mid++, tokenSpans, extr.getArgument2(), view);
+                // TODO: 2016-05-19 01:19:38EDT  By using ConfidenceFunction, we can filter out low-confident relations. Should we?
+                Iterator<ChunkedBinaryExtraction> extracted = extractRelations(sent, view, serviceName);
 
-                Annotation relation = view.newAnnotation(makeID("rel_", sid, rid++), Uri.GENERIC_RELATION);
-                relation.addFeature("arguments", Arrays.toString(new String[]{arg1Mid, arg2Mid}));
-                relation.addFeature("relation", relMid);
-                relation.addFeature("label", rel.getText());
+                while (extracted.hasNext()) {
+                    ChunkedBinaryExtraction extr = extracted.next();
+                    ChunkedExtraction rel = extr.getRelation();
+                    // add each as markable, and remember markable IDs
+                    String relMid = addMarkbleAnnotation(sidx, midx++, tokenSpans, rel, view);
+                    String arg1Mid = addMarkbleAnnotation(sidx, midx++, tokenSpans, extr.getArgument1(), view);
+                    String arg2Mid = addMarkbleAnnotation(sidx, midx++, tokenSpans, extr.getArgument2(), view);
+
+                    // use remembered markable IDs to add relation annotation
+                    Annotation relation = view.newAnnotation(makeID("rel_", sidx, ridx++), Uri.GENERIC_RELATION);
+                    relation.addFeature("arguments", Arrays.toString(new String[]{arg1Mid, arg2Mid}));
+                    relation.addFeature("relation", relMid);
+                    relation.addFeature("label", rel.getText());
+                }
+                sidx++;
             }
-            sid++;
         }
-        Data<Container> data = new Data<>(Uri.LIF, json);
+        Data<Container> data = new Data<>(Uri.LIF, lif);
         return Serializer.toJson(data);
     }
 
-    private String addMarkbleAnnotation(int sid, int mid, List<int[]> tokenSpans, ChunkedExtraction markable, View view) {
-        String markableId = makeID("m_", sid, mid);
-        final int firstTokenIdx = markable.getRange().getStart();
-        int lastTokenIdx = markable.getRange().getEnd() - 1;
-        int charOffsetStart = tokenSpans.get(firstTokenIdx)[0];
-        int charOffsetEnd = tokenSpans.get(lastTokenIdx)[1];
-        Annotation markableAnnotation = view.newAnnotation(markableId, Uri.MARKABLE, charOffsetStart, charOffsetEnd);
-        List<String> targetTokens = new ArrayList<>();
-        for (int i = firstTokenIdx; i <= lastTokenIdx; i++) {
-            targetTokens.add(makeID("tk_", sid, i + 1));
-        }
-        markableAnnotation.addFeature("targets", targetTokens.toString());
-        return markableId;
-    }
-
-    private Iterator<ChunkedBinaryExtraction> hasRelation(ReVerbExtractor reverb, View view, String serviceName, ChunkedSentence sent) {
+    /**
+     * With given a chunked sentence, extract relations using reverb library.
+     * If any relation is found, add contains information to the container.
+     */
+    private Iterator<ChunkedBinaryExtraction> extractRelations(ChunkedSentence sent, View view, String serviceName) {
+        ReVerbExtractor reverb = new ReVerbExtractor();
         Iterator<ChunkedBinaryExtraction> extracted = reverb.extract(sent).iterator();
         if (extracted.hasNext()) {
             view.addContains(Uri.MARKABLE, String.format("%s:%s", serviceName, getVersion()),
@@ -215,15 +205,36 @@ public class ReVerbWebService implements WebService {
         return extracted;
     }
 
-    private List<int[]> addTokenAnnotations(ChunkedSentence sent, int sid, View view) {
-        int tid = 1;
+    /**
+     * With given indices and extracted chunk, add a single Markable annotation to the view
+     */
+    private String addMarkbleAnnotation(int sidx, int midx, List<int[]> tokenSpans, ChunkedExtraction markable, View view) {
+        String markableId = makeID("m_", sidx, midx);
+        final int firstTokenIdx = markable.getRange().getStart();
+        int lastTokenIdx = markable.getRange().getEnd() - 1;
+        int charOffsetStart = tokenSpans.get(firstTokenIdx)[0];
+        int charOffsetEnd = tokenSpans.get(lastTokenIdx)[1];
+        Annotation markableAnnotation = view.newAnnotation(markableId, Uri.MARKABLE, charOffsetStart, charOffsetEnd);
+        List<String> targetTokens = new ArrayList<>();
+        for (int i = firstTokenIdx; i <= lastTokenIdx; i++) {
+            targetTokens.add(makeID("tk_", sidx, i + 1));
+        }
+        markableAnnotation.addFeature("targets", targetTokens.toString());
+        return markableId;
+    }
+
+    /**
+     * With given a chunked sentence, add all tokens to the view
+     */
+    private List<int[]> addTokenAnnotations(ChunkedSentence sent, int sidx, View view) {
+        int tidx = 1;
         List<int[]> tokenSpans = new ArrayList<>();
         for (String token : sent.getTokens()) {
-            Range curTokSpan = sent.getOffsets().get(tid - 1);
+            Range curTokSpan = sent.getOffsets().get(tidx - 1);
             int start = curTokSpan.getStart(); int end = curTokSpan.getEnd();
             tokenSpans.add(new int[]{start, end});
             Annotation tok = view.newAnnotation(
-                    makeID("tk_", sid, tid++), Uri.TOKEN,
+                    makeID("tk_", sidx, tidx++), Uri.TOKEN,
                     start, end);
             tok.addFeature("word", token);
         }
@@ -273,15 +284,15 @@ public class ReVerbWebService implements WebService {
     /**
      * Generates ID string
      */
-    protected static String makeID(String type, int sid, int tid) {
-        return String.format("%s%d_%d", type, sid, tid);
+    private static String makeID(String prefix, int sidx, int tidx) {
+        return String.format("%s%d_%d", prefix, sidx, tidx);
     }
 
     /**
      * Generates ID string
      */
-    protected static String makeID(String type, int id) {
-        return String.format("%s%d", type, id);
+    private static String makeID(String prefix, int id) {
+        return String.format("%s%d", prefix, id);
 
     }
 

@@ -9,13 +9,15 @@ import org.lappsgrid.serialization.lif.Annotation;
 import org.lappsgrid.serialization.lif.Container;
 import org.lappsgrid.serialization.lif.View;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.lappsgrid.discriminator.Discriminators.Uri;
 
 /**
- * Copied from stanford-web-service
+ * Tests for ReVerb relation extractor wrapper
  * @author krim@brandeis.edu
  */
 public class TestReVerbWenService extends TestService {
@@ -48,13 +50,14 @@ public class TestReVerbWenService extends TestService {
                 resultFromPure, resultFromLEDS);
 
     }
+
     @Test
     public void canProcessSimpleSent(){
         String result = service.execute(simpleTestSent);
-        Container resultCont = reconstructPayload(result);
         System.out.println("<------------------------------------------------------------------------------");
         System.out.println(result);
         System.out.println("------------------------------------------------------------------------------>");
+        Container resultCont = reconstructPayload(result);
         assertEquals("Text is corrupted.", simpleTestSent, resultCont.getText());
         List<View> views = resultCont.getViews();
         if (views.size() != 1) {
@@ -64,7 +67,35 @@ public class TestReVerbWenService extends TestService {
         assertTrue("View not containing Tokens", view.contains(Uri.TOKEN));
         assertTrue("View not containing Markables", view.contains(Uri.MARKABLE));
         assertTrue("View not containing Relations", view.contains(Uri.GENERIC_RELATION));
+        Collection<Annotation> relations = getRelations(view);
+        assertEquals("Expected 1 relation extracted, found: " + relations.size(),
+                1, relations.size());
         System.out.println(Serializer.toPrettyJson(resultCont));
+    }
+
+
+    @Test(expected = NullPointerException.class)
+    public void canProcessEmptySent() {
+        String result = service.execute("");
+        System.out.println("<------------------------------------------------------------------------------");
+        System.out.println(result);
+        System.out.println("------------------------------------------------------------------------------>");
+        Container resultCont = reconstructPayload(result);
+        assertEquals("Expected 0 annotations, found: " + resultCont.getView(0).getAnnotations().size(),
+                0, resultCont.getView(0).getAnnotations().size());
+        System.out.println(Serializer.toPrettyJson(resultCont));
+        // this will throw NPE
+        resultCont.getView(0).getMetadata().get("contains");
+    }
+
+    private Collection<Annotation> getRelations(View view) {
+        Collection<Annotation> relations = new ArrayList<>();
+        for (Annotation annotation : view.getAnnotations()) {
+            if (annotation.getAtType().equals(Uri.GENERIC_RELATION)) {
+                relations.add(annotation);
+            }
+        }
+        return relations;
     }
 
     @Test
@@ -75,8 +106,10 @@ public class TestReVerbWenService extends TestService {
         System.out.println(result);
         System.out.println("------------------------------------------------------------------------------>");
         Container resultCont = reconstructPayload(result);
-        List<Annotation> annotations = resultCont.getView(0).getAnnotations();
-//        assertEquals("Expected 82 tokens, found: " + annotations.size(), 82, annotations.size());
+        View view = resultCont.getView(0);
+        Collection<Annotation> relations = getRelations(view);
+        assertEquals("Expected 2 relations extracted, found: " + relations.size(),
+                2, relations.size());
         System.out.println(Serializer.toPrettyJson(resultCont));
 
     }
