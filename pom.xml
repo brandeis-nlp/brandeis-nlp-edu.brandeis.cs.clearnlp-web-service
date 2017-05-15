@@ -5,7 +5,7 @@
     <artifactId>reverb-web-service</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>Web Services wrapping ReVerb software</name>
+    <name>Brandeis LAPPS Web Services Wrapping ReVerb relation extractor</name>
     <description>
         Publish API for the LAPPS exchange data structure (LEDS), the thing that will be serialized to from JSON-LD.
         Provide converter for the ReVerb output into LEDS and LIF format.
@@ -17,22 +17,8 @@
     </parent>
 
     <properties>
-        <lapps.all>2.3.1</lapps.all>
-        <lapps.annotations>1.1.0</lapps.annotations>
+        <lapps.all>2.3.3</lapps.all>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>lappsgrid.snapshots</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 
     <pluginRepositories>
         <pluginRepository>
@@ -42,18 +28,6 @@
     </pluginRepositories>
 
     <dependencies>
-        <dependency>
-            <groupId>org.lappsgrid</groupId>
-            <artifactId>annotations</artifactId>
-            <version>${lapps.annotations}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.lappsgrid</groupId>
-            <artifactId>discriminator</artifactId>
-            <version>2.3.0-SNAPSHOT</version>
-        </dependency>
-
         <dependency>
             <groupId>org.lappsgrid</groupId>
             <artifactId>all</artifactId>
