@@ -1,5 +1,6 @@
 package edu.brandeis.cs.lappsgrid.reverb;
 
+
 import edu.washington.cs.knowitall.commonlib.Range;
 import edu.washington.cs.knowitall.extractor.ReVerbExtractor;
 import edu.washington.cs.knowitall.nlp.ChunkedSentence;
@@ -97,9 +98,11 @@ public class ReVerbWebService implements WebService {
             return errorLEDS("Input is null");
         }
         Data leds;
-        leds = Serializer.parse(input, Data.class);
-        // Serializer will catch any json exception and return null if parsing fails
-        if (leds ==  null) {
+        try {
+            leds = Serializer.parse(input, Data.class);
+        } catch (Exception e) {
+            // Serializer#parse will throw a Unchecked groovy exception
+            // if the input is not a well-formed json
             leds = new Data();
             leds.setDiscriminator(Uri.TEXT);
             leds.setPayload(input);
