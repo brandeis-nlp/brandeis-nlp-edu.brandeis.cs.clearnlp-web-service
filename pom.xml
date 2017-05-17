@@ -97,6 +97,7 @@
                 </configuration>
             </plugin>
 
+            <!-- will generate Version class at project root, which is used in test -->
             <plugin>
                 <groupId>org.anc.maven.plugins</groupId>
                 <artifactId>anc-maven-plugin</artifactId>
@@ -111,7 +112,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <package>edu.brandeis.cs.lappsgrid</package>
+                    <package>edu.brandeis.cs.lappsgrid.reverb</package>
                 </configuration>
             </plugin>
         </plugins>
