@@ -83,11 +83,6 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
-                    <annotationProcessors>
-                        <annotationProcessor>
-                            org.lappsgrid.annotation.processing.MetadataProcessor
-                        </annotationProcessor>
-                    </annotationProcessors>
                 </configuration>
             </plugin>
 

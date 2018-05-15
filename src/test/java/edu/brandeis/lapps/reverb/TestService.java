@@ -22,6 +22,7 @@ public class TestService {
 
     protected Container wrapContainer(String plainText) {
         Container container = new Container();
+        container.setSchema(ReVerbWebService.LIF_SCHEMA);
         container.setText(plainText);
         container.setLanguage("en");
         // return empty metadata for process result (for now)

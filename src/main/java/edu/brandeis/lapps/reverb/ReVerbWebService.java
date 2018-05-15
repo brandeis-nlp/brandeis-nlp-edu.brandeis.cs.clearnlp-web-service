@@ -32,17 +32,9 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
  *
  */
 
-@org.lappsgrid.annotations.ServiceMetadata(
-        vendor = "http://www.cs.brandeis.edu/",
-        license = "apache2",
-        allow = "any",
-        language = { "en" },
-        description = "ReVerb Relation Extractor",
-        requires_format = { "text", "lif" },
-        produces_format = { "lif" },
-        produces = { "generic-relation", "markable", "token" }
-)
 public class ReVerbWebService implements WebService {
+
+    public static final String LIF_SCHEMA = "http://vocab.lappsgrid.org/schema/container-schema-1.0.0.json";
 
     private static final Logger log = LoggerFactory.getLogger(ReVerbWebService.class);
     private String metadataString;
@@ -124,7 +116,7 @@ public class ReVerbWebService implements WebService {
                 log.info("Input contains TEXT");
                 lif = new Container();
                 // TODO: 5/9/18  fix url when it settles in
-                lif.setSchema("http://vocab.lappsgrid.org/schema/container-schema-1.0.0.json");
+                lif.setSchema(LIF_SCHEMA);
                 lif.setText((String) leds.getPayload());
                 lif.setLanguage("en");
                 break;
