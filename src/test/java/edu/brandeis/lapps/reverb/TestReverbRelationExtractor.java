@@ -23,13 +23,13 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
  * Tests for ReVerb relation extractor wrapper
  * @author krim@brandeis.edu
  */
-public class TestReVerbWebService extends TestService {
+public class TestReverbRelationExtractor extends TestService {
 
     String simpleTestSent = "She swam to Paris.";
     String testSents = "Mary loves John, but John hates her. Sally is his wife. ";
 
-    public TestReVerbWebService() throws Exception {
-        service = new ReVerbWebService();
+    public TestReverbRelationExtractor() throws Exception {
+        service = new ReverbRelationExtractor();
     }
 
     @Test

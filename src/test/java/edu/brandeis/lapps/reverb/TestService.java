@@ -18,11 +18,11 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
  */
 public class TestService {
 
-    protected ReVerbWebService service;
+    protected ReverbRelationExtractor service;
 
     protected Container wrapContainer(String plainText) {
         Container container = new Container();
-        container.setSchema(ReVerbWebService.LIF_SCHEMA);
+        container.setSchema(ReverbRelationExtractor.LIF_SCHEMA);
         container.setText(plainText);
         container.setLanguage("en");
         // return empty metadata for process result (for now)

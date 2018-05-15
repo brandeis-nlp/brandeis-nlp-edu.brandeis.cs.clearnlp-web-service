@@ -32,11 +32,11 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
  *
  */
 
-public class ReVerbWebService implements WebService {
+public class ReverbRelationExtractor implements WebService {
 
     public static final String LIF_SCHEMA = "http://vocab.lappsgrid.org/schema/container-schema-1.0.0.json";
 
-    private static final Logger log = LoggerFactory.getLogger(ReVerbWebService.class);
+    private static final Logger log = LoggerFactory.getLogger(ReverbRelationExtractor.class);
     private String metadataString;
 
     /**
@@ -44,7 +44,7 @@ public class ReVerbWebService implements WebService {
      * Only loads up metadata json file.
      * These json files are generated from @annotation of this class by mvn compilation
      */
-    public ReVerbWebService() {
+    public ReverbRelationExtractor() {
         try {
             metadataString = loadMetadata();
         } catch(Exception e) {

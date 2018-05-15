@@ -3,7 +3,7 @@
 <beans>
   <bean id="target" class="jp.go.nict.langrid.servicecontainer.handler.TargetServiceFactory" >
     <property name="service">
-      <bean class="edu.brandeis.lapps.reverb.ReVerbWebService" />
+      <bean class="edu.brandeis.lapps.reverb.ReverbRelationExtractor" />
     </property>
   </bean>
 </beans>
