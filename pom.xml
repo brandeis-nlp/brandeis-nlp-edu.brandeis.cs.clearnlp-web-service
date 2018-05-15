@@ -30,11 +30,6 @@
     <dependencies>
         <dependency>
             <groupId>org.lappsgrid</groupId>
-            <artifactId>serialization</artifactId>
-            <version>2.6.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.lappsgrid</groupId>
             <artifactId>all</artifactId>
             <version>${lapps.all}</version>
         </dependency>

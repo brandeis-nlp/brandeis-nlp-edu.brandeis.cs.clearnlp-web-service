@@ -116,7 +116,7 @@ public class ReverbRelationExtractor implements WebService {
                 log.info("Input contains TEXT");
                 lif = new Container();
                 // TODO: 5/9/18  fix url when it settles in
-                lif.setSchema(LIF_SCHEMA);
+//                lif.setSchema(LIF_SCHEMA);
                 lif.setText((String) leds.getPayload());
                 lif.setLanguage("en");
                 break;
