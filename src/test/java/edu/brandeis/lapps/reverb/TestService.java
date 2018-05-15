@@ -1,6 +1,5 @@
-package edu.brandeis.cs.lappsgrid.reverb;
+package edu.brandeis.lapps.reverb;
 
-import edu.brandeis.cs.lappsgrid.reverb.Version;
 import org.lappsgrid.metadata.IOSpecification;
 import org.lappsgrid.metadata.ServiceMetadata;
 import org.lappsgrid.serialization.Data;

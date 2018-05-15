@@ -1,4 +1,4 @@
-package edu.brandeis.cs.lappsgrid.reverb;
+package edu.brandeis.lapps.reverb;
 
 import org.junit.Test;
 import org.lappsgrid.metadata.IOSpecification;
@@ -20,12 +20,12 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
  * Tests for ReVerb relation extractor wrapper
  * @author krim@brandeis.edu
  */
-public class TestReVerbWenService extends TestService {
+public class TestReVerbWebService extends TestService {
 
     String simpleTestSent = "She swam to Paris.";
     String testSents = "Mary loves John, but John hates her.";
 
-    public TestReVerbWenService() throws Exception {
+    public TestReVerbWebService() throws Exception {
         service = new ReVerbWebService();
     }
 

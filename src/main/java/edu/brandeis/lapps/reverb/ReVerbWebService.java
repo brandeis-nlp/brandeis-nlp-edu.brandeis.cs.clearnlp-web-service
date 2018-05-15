@@ -1,4 +1,4 @@
-package edu.brandeis.cs.lappsgrid.reverb;
+package edu.brandeis.lapps.reverb;
 
 
 import edu.washington.cs.knowitall.commonlib.Range;
