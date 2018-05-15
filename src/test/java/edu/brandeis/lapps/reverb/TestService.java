@@ -57,12 +57,12 @@ public class TestService {
         IOSpecification produces = metadata.getProduces();
         assertEquals("Too many output formats", 1, produces.getFormat().size());
 //        assertEquals("Produces encoding is not correct", "UTF-8", produces.getEncoding());
-        assertEquals("LIF not produced", Uri.LAPPS, produces.getFormat().get(0));
+        assertEquals("LIF not produced", Uri.LIF, produces.getFormat().get(0));
 
         IOSpecification requires = metadata.getRequires();
 //        assertEquals("Requires encoding is not correct", "UTF-8", requires.getEncoding());
         List<String> list = requires.getFormat();
-        assertTrue("LIF not accepted.", list.contains(Uri.LAPPS));
+        assertTrue("LIF not accepted.", list.contains(Uri.LIF));
         assertTrue("Text not accepted", list.contains(Uri.TEXT));
         list = requires.getAnnotations();
         assertEquals("Required annotations should be empty", 0, list.size());

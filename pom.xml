@@ -17,7 +17,7 @@
     </parent>
 
     <properties>
-        <lapps.all>2.3.3</lapps.all>
+        <lapps.all>2.4.0</lapps.all>
     </properties>
 
     <pluginRepositories>
@@ -28,6 +28,11 @@
     </pluginRepositories>
 
     <dependencies>
+        <dependency>
+            <groupId>org.lappsgrid</groupId>
+            <artifactId>serialization</artifactId>
+            <version>2.6.0-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.lappsgrid</groupId>
             <artifactId>all</artifactId>
@@ -122,7 +127,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <package>edu.brandeis.cs.lappsgrid.reverb</package>
+                    <package>edu.brandeis.lapps.reverb</package>
                 </configuration>
             </plugin>
         </plugins>

@@ -7,8 +7,8 @@ import edu.washington.cs.knowitall.nlp.ChunkedSentence;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedBinaryExtraction;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedExtraction;
 import edu.washington.cs.knowitall.util.DefaultObjects;
-import org.apache.xerces.impl.io.UTF8Reader;
 import org.lappsgrid.api.WebService;
+import org.lappsgrid.metadata.IOSpecification;
 import org.lappsgrid.metadata.ServiceMetadata;
 import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.Serializer;
@@ -45,7 +45,7 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
 public class ReVerbWebService implements WebService {
 
     private static final Logger log = LoggerFactory.getLogger(ReVerbWebService.class);
-    private String metadata;
+    private String metadataString;
 
     /**
      * Default constructor.
@@ -54,7 +54,7 @@ public class ReVerbWebService implements WebService {
      */
     public ReVerbWebService() {
         try {
-            loadMetadata();
+            metadataString = loadMetadata();
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -123,6 +123,8 @@ public class ReVerbWebService implements WebService {
             case Uri.TEXT:
                 log.info("Input contains TEXT");
                 lif = new Container();
+                // TODO: 5/9/18  fix url when it settles in
+                lif.setSchema("http://vocab.lappsgrid.org/schema/container-schema-1.0.0.json");
                 lif.setText((String) leds.getPayload());
                 lif.setLanguage("en");
                 break;
@@ -252,39 +254,41 @@ public class ReVerbWebService implements WebService {
      * Load metadata from compiler generated json files.
      * @throws IOException when metadata json file was not found.
      */
-    public void loadMetadata() throws IOException {
-        // get caller name using reflection
-        String serviceName = this.getClass().getName();
-        String resUri = String.format("/metadata/%s.json", serviceName);
-        log.info("load resources:" + resUri);
-        InputStream inputStream = this.getClass().getResourceAsStream(resUri);
+    public String loadMetadata() throws IOException {
 
-        if (inputStream == null) {
-            String message = "Unable to load metadata file for " + serviceName;
-            log.error(message);
-            throw new IOException(message);
-        } else {
-            UTF8Reader reader = new UTF8Reader(inputStream);
-            try {
-                Scanner s = new Scanner(reader).useDelimiter("\\A");
-                String metadataText = s.hasNext() ? s.next() : "";
-                // somehow, org.lappsgrid.annotations module cannot properly get version
-                // from pom.xml before compilation, so I add it manually in runtime
-                ServiceMetadata parsedMetadata = Serializer.parse(metadataText, ServiceMetadata.class);
-                parsedMetadata.setVersion(getVersion());
-                metadata = (new Data<>(Uri.META, parsedMetadata)).asPrettyJson();
-            } catch (Exception e) {
-                String message = "Unable to parse json for " + this.getClass().getName();
-                log.error(message, e);
-                metadata = (new Data<>(Uri.ERROR, message)).asPrettyJson();
-            }
-            reader.close();
-        }
+
+        ServiceMetadata metadata = new ServiceMetadata();
+        // TODO: 4/22/18 fix url when it settles in
+        metadata.setSchema("http://vocab.lappsgrid.org/schema/metadata-schema-1.1.0.json");
+        metadata.setVendor("http://www.cs.brandeis.edu/");
+        metadata.setLicense(Uri.APACHE2);
+        // TODO: 5/15/2018 write better description
+        metadata.setDescription("ReVerb Relation Extractor");
+        // TODO: 5/15/2018 find full string for "any"
+        metadata.setAllow("any");
+        metadata.setVersion(this.getVersion());
+        metadata.setName(this.getClass().getName());
+
+        IOSpecification required = new IOSpecification();
+        required.addLanguage("en");
+        required.setEncoding("UTF-8");
+        required.addFormat(Uri.TEXT);
+        required.addFormat(Uri.LIF);
+        metadata.setRequires(required);
+
+        IOSpecification produces = new IOSpecification();
+        produces.addLanguage("en");
+        produces.setEncoding("UTF-8");
+        produces.addFormat(Uri.LIF);
+        produces.addAnnotations(Uri.TOKEN, Uri.GENERIC_RELATION, Uri.MARKABLE);
+        metadata.setProduces(produces);
+
+        return new Data<>(Uri.META, metadata).asJson();
     }
 
     @Override
     public String getMetadata() {
-        return this.metadata;
+        return this.metadataString;
     }
 
     /* ================= some helpers ================== */
