@@ -4,7 +4,6 @@ package edu.brandeis.lapps.reverb;
 import edu.washington.cs.knowitall.commonlib.Range;
 import edu.washington.cs.knowitall.extractor.ReVerbExtractor;
 import edu.washington.cs.knowitall.nlp.ChunkedSentence;
-import edu.washington.cs.knowitall.nlp.ChunkedSentenceReader;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedBinaryExtraction;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedExtraction;
 import edu.washington.cs.knowitall.util.DefaultObjects;
@@ -16,6 +15,7 @@ import org.lappsgrid.serialization.Serializer;
 import org.lappsgrid.serialization.lif.Annotation;
 import org.lappsgrid.serialization.lif.Container;
 import org.lappsgrid.serialization.lif.View;
+import org.lappsgrid.vocabulary.Features;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,7 +148,7 @@ public class ReVerbWebService implements WebService {
         String inputText = lif.getText();
         if (inputText.length() > 0) {
             log.info("Loading sentence splitter && chunker");
-            ChunkedSentenceReader sentReader = DefaultObjects.getDefaultSentenceReader(new StringReader(inputText));
+            String[] sentences = DefaultObjects.getDefaultSentenceDetector().sentDetect(inputText);
             log.info("Done!");
 
             log.info("Loading relation extractor");
@@ -161,9 +161,13 @@ public class ReVerbWebService implements WebService {
                     "tokenization:reverb");
 
             int sidx = 1;
-            for (ChunkedSentence sent : sentReader.getSentences()) {
-//            if (!view.contains(Uri.TOKEN)) {
-//            }
+            for (String sentence : sentences) {
+                // We did sent-split first, using the same library. So we believe this "sentence" string only contains one sentence.
+                Iterator<ChunkedSentence> chunkedSentenceIterator = DefaultObjects.getDefaultSentenceReader(new StringReader(sentence)).getSentences().iterator();
+                if (!chunkedSentenceIterator.hasNext()) {
+                    continue;
+                }
+                ChunkedSentence sent = chunkedSentenceIterator.next();
                 int midx = 1;
                 int ridx = 1;
                 List<int[]> tokenSpans = addTokenAnnotations(sent, sidx, view);
@@ -181,9 +185,9 @@ public class ReVerbWebService implements WebService {
 
                     // use remembered markable IDs to add relation annotation
                     Annotation relation = view.newAnnotation(makeID("rel_", sidx, ridx++), Uri.GENERIC_RELATION);
-                    relation.addFeature("arguments", Arrays.toString(new String[]{arg1Mid, arg2Mid}));
-                    relation.addFeature("relation", relMid);
-                    relation.addFeature("label", rel.getText());
+                    relation.addFeature(Features.GenericRelation.ARGUMENTS, Arrays.toString(new String[]{arg1Mid, arg2Mid}));
+                    relation.addFeature(Features.GenericRelation.RELATION, relMid);
+                    relation.addFeature(Features.GenericRelation.LABEL, rel.getText());
                 }
                 sidx++;
             }

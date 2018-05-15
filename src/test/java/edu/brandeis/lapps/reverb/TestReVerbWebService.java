@@ -9,9 +9,11 @@ import org.lappsgrid.serialization.lif.Annotation;
 import org.lappsgrid.serialization.lif.Container;
 import org.lappsgrid.serialization.lif.View;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Scanner;
 
 import static org.junit.Assert.*;
 import static org.lappsgrid.discriminator.Discriminators.Uri;
@@ -23,7 +25,7 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
 public class TestReVerbWebService extends TestService {
 
     String simpleTestSent = "She swam to Paris.";
-    String testSents = "Mary loves John, but John hates her.";
+    String testSents = "Mary loves John, but John hates her. Sally is his wife. ";
 
     public TestReVerbWebService() throws Exception {
         service = new ReVerbWebService();
@@ -107,10 +109,22 @@ public class TestReVerbWebService extends TestService {
         System.out.println("------------------------------------------------------------------------------>");
         Container resultCont = reconstructPayload(result);
         View view = resultCont.getView(0);
+        System.out.println(Serializer.toPrettyJson(resultCont));
         Collection<Annotation> relations = getRelations(view);
         assertEquals("Expected 2 relations extracted, found: " + relations.size(),
                 2, relations.size());
-        System.out.println(Serializer.toPrettyJson(resultCont));
 
+    }
+
+    @Test
+    public void canProcessReallyLongerSent() {
+
+        String masc2_0040 = new Scanner(getClass().getResourceAsStream("/MASC2-0040.json"), StandardCharsets.UTF_8.name()).useDelimiter("\\A").next();
+
+        String result = service.execute(masc2_0040);
+        Container resultCont = reconstructPayload(result);
+        assertEquals("Too many views", 1, resultCont.getViews().size());
+        View view = resultCont.getView(0);
+        System.out.println(Serializer.toPrettyJson(resultCont));
     }
 }
