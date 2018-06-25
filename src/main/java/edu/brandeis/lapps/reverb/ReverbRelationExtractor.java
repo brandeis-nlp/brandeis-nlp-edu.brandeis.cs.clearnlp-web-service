@@ -155,7 +155,9 @@ public class ReverbRelationExtractor implements WebService {
                     "tokenization:reverb");
 
             int sidx = 1;
+            int soffset = 0;
             for (String sentence : sentences) {
+                soffset = inputText.indexOf(sentence, soffset);
                 // We did sent-split first, using the same library. So we believe this "sentence" string only contains one sentence.
                 Iterator<ChunkedSentence> chunkedSentenceIterator = DefaultObjects.getDefaultSentenceReader(new StringReader(sentence)).getSentences().iterator();
                 if (!chunkedSentenceIterator.hasNext()) {
@@ -164,7 +166,7 @@ public class ReverbRelationExtractor implements WebService {
                 ChunkedSentence sent = chunkedSentenceIterator.next();
                 int midx = 1;
                 int ridx = 1;
-                List<int[]> tokenSpans = addTokenAnnotations(sent, sidx, view);
+                List<int[]> tokenSpans = addTokenAnnotations(sent, sidx, soffset, view);
 
                 // TODO: 2016-05-19 01:19:38EDT  By using ConfidenceFunction, we can filter out low-confident relations. Should we?
                 Iterator<ChunkedBinaryExtraction> extracted = extractRelations(sent, view, serviceName);
@@ -184,6 +186,7 @@ public class ReverbRelationExtractor implements WebService {
                     relation.addFeature(Features.GenericRelation.LABEL, rel.getText());
                 }
                 sidx++;
+                soffset += sentence.length();
             }
         }
         Data<Container> data = new Data<>(Uri.LIF, lif);
@@ -227,12 +230,12 @@ public class ReverbRelationExtractor implements WebService {
     /**
      * With given a chunked sentence, add all tokens to the view
      */
-    private List<int[]> addTokenAnnotations(ChunkedSentence sent, int sidx, View view) {
+    private List<int[]> addTokenAnnotations(ChunkedSentence sent, int sidx, int soffset, View view) {
         int tidx = 1;
         List<int[]> tokenSpans = new ArrayList<>();
         for (String token : sent.getTokens()) {
             Range curTokSpan = sent.getOffsets().get(tidx - 1);
-            int start = curTokSpan.getStart(); int end = curTokSpan.getEnd();
+            int start = curTokSpan.getStart() + soffset; int end = curTokSpan.getEnd() + soffset;
             tokenSpans.add(new int[]{start, end});
             Annotation tok = view.newAnnotation(
                     makeID("tk_", sidx, tidx++), Uri.TOKEN,
