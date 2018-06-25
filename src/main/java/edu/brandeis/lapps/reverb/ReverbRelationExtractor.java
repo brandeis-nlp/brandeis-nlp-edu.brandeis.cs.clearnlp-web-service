@@ -148,7 +148,7 @@ public class ReverbRelationExtractor implements WebService {
             log.info("Loading relation extractor");
             log.info("Done!");
 
-            View view = lif.newView();
+            View view = lif.newView("v00" + (lif.getViews().size() + 1));
 
             String serviceName = this.getClass().getName();
             view.addContains(Uri.TOKEN, String.format("%s:%s", serviceName, getVersion()),
