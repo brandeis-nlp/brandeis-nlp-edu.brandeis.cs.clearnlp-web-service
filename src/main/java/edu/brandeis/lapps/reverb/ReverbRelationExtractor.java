@@ -219,11 +219,6 @@ public class ReverbRelationExtractor implements WebService {
         int charOffsetStart = tokenSpans.get(firstTokenIdx)[0];
         int charOffsetEnd = tokenSpans.get(lastTokenIdx)[1];
         Annotation markableAnnotation = view.newAnnotation(markableId, Uri.MARKABLE, charOffsetStart, charOffsetEnd);
-        List<String> targetTokens = new ArrayList<>();
-        for (int i = firstTokenIdx; i <= lastTokenIdx; i++) {
-            targetTokens.add(makeID("tk_", sidx, i + 1));
-        }
-        markableAnnotation.addFeature("targets", targetTokens.toString());
         return markableId;
     }
 
