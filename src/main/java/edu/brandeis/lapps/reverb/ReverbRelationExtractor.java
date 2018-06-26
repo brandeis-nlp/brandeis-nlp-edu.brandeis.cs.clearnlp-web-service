@@ -175,14 +175,14 @@ public class ReverbRelationExtractor implements WebService {
                     ChunkedBinaryExtraction extr = extracted.next();
                     ChunkedExtraction rel = extr.getRelation();
                     // add each as markable, and remember markable IDs
-                    String relMid = addMarkbleAnnotation(sidx, midx++, tokenSpans, rel, view);
-                    String arg1Mid = addMarkbleAnnotation(sidx, midx++, tokenSpans, extr.getArgument1(), view);
-                    String arg2Mid = addMarkbleAnnotation(sidx, midx++, tokenSpans, extr.getArgument2(), view);
+                    Annotation relMid = addMarkbleAnnotation(sidx, midx++, tokenSpans, rel, view);
+                    Annotation arg1Mid = addMarkbleAnnotation(sidx, midx++, tokenSpans, extr.getArgument1(), view);
+                    Annotation arg2Mid = addMarkbleAnnotation(sidx, midx++, tokenSpans, extr.getArgument2(), view);
 
                     // use remembered markable IDs to add relation annotation
                     Annotation relation = view.newAnnotation(makeID("rel_", sidx, ridx++), Uri.GENERIC_RELATION);
-                    relation.addFeature(Features.GenericRelation.ARGUMENTS, Arrays.toString(new String[]{arg1Mid, arg2Mid}));
-                    relation.addFeature(Features.GenericRelation.RELATION, relMid);
+                    relation.addFeature(Features.GenericRelation.ARGUMENTS, Arrays.toString(new String[]{arg1Mid.getId(), arg2Mid.getId()}));
+                    relation.addFeature(Features.GenericRelation.RELATION, relMid.getId());
                     relation.addFeature(Features.GenericRelation.LABEL, rel.getText());
                 }
                 sidx++;
@@ -212,14 +212,14 @@ public class ReverbRelationExtractor implements WebService {
     /**
      * With given indices and extracted chunk, add a single Markable annotation to the view
      */
-    private String addMarkbleAnnotation(int sidx, int midx, List<int[]> tokenSpans, ChunkedExtraction markable, View view) {
+    private Annotation addMarkbleAnnotation(int sidx, int midx, List<int[]> tokenSpans, ChunkedExtraction markable, View view) {
         String markableId = makeID("m_", sidx, midx);
         final int firstTokenIdx = markable.getRange().getStart();
         int lastTokenIdx = markable.getRange().getEnd() - 1;
         int charOffsetStart = tokenSpans.get(firstTokenIdx)[0];
         int charOffsetEnd = tokenSpans.get(lastTokenIdx)[1];
         Annotation markableAnnotation = view.newAnnotation(markableId, Uri.MARKABLE, charOffsetStart, charOffsetEnd);
-        return markableId;
+        return markableAnnotation;
     }
 
     /**
