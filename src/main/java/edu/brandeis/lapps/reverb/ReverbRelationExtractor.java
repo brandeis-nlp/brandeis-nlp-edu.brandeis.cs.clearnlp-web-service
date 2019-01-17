@@ -181,7 +181,7 @@ public class ReverbRelationExtractor implements WebService {
 
                     // use remembered markable IDs to add relation annotation
                     Annotation relation = view.newAnnotation(makeID("rel_", sidx, ridx++), Uri.GENERIC_RELATION);
-                    relation.addFeature(Features.GenericRelation.ARGUMENTS, Arrays.toString(new String[]{arg1Mid.getId(), arg2Mid.getId()}));
+                    relation.addFeature(Features.GenericRelation.ARGUMENTS, Arrays.asList(arg1Mid.getId(), arg2Mid.getId()));
                     relation.addFeature(Features.GenericRelation.RELATION, relMid.getId());
                     relation.addFeature(Features.GenericRelation.LABEL, rel.getText());
                 }
