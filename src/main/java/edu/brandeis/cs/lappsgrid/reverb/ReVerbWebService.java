@@ -181,7 +181,7 @@ public class ReVerbWebService implements WebService {
 
                     // use remembered markable IDs to add relation annotation
                     Annotation relation = view.newAnnotation(makeID("rel_", sidx, ridx++), Uri.GENERIC_RELATION);
-                    relation.addFeature("arguments", Arrays.toString(new String[]{arg1Mid, arg2Mid}));
+                    relation.addFeature("arguments", Arrays.asList(arg1Mid, arg2Mid));
                     relation.addFeature("relation", relMid);
                     relation.addFeature("label", rel.getText());
                 }
