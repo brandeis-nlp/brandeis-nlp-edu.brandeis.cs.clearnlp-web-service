@@ -3,7 +3,9 @@ package edu.brandeis.lapps.reverb;
 
 import edu.washington.cs.knowitall.commonlib.Range;
 import edu.washington.cs.knowitall.extractor.ReVerbExtractor;
+import edu.washington.cs.knowitall.extractor.SentenceExtractor;
 import edu.washington.cs.knowitall.nlp.ChunkedSentence;
+import edu.washington.cs.knowitall.nlp.ChunkedSentenceReader;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedBinaryExtraction;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedExtraction;
 import edu.washington.cs.knowitall.util.DefaultObjects;
@@ -159,7 +161,17 @@ public class ReverbRelationExtractor implements WebService {
             for (String sentence : sentences) {
                 soffset = inputText.indexOf(sentence, soffset);
                 // We did sent-split first, using the same library. So we believe this "sentence" string only contains one sentence.
-                Iterator<ChunkedSentence> chunkedSentenceIterator = DefaultObjects.getDefaultSentenceReader(new StringReader(sentence)).getSentences().iterator();
+
+                // Use this default constructor, and add no "filter" that removes, for example bracketed substring (BracketsRemover).
+                SentenceExtractor extractor = new SentenceExtractor();
+//                extractor.addMapper(new BracketsRemover());
+//                extractor.addMapper(new SentenceEndFilter());
+//                extractor.addMapper(new SentenceStartFilter());
+                // And purge new line characters. "extractor" would ignore substring after the first newline otherwise
+                String linepurged = sentence.replace("\n", " ");
+                ChunkedSentenceReader reader = new ChunkedSentenceReader(new StringReader(linepurged), extractor);
+
+                Iterator<ChunkedSentence> chunkedSentenceIterator = reader.getSentences().iterator();
                 if (!chunkedSentenceIterator.hasNext()) {
                     continue;
                 }
