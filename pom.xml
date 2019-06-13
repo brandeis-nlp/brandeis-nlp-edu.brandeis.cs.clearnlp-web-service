@@ -1,14 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>edu.brandeis.cs.lapps</groupId>
     <artifactId>reverb-web-service</artifactId>
     <version>1.1.0-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>Brandeis LAPPS Web Services Wrapping ReVerb relation extractor</name>
+    <name>Brandeis LAPPS Grid application Wraps ReVerb relation extractor</name>
     <description>
-        Publish API for the LAPPS exchange data structure (LEDS), the thing that will be serialized to from JSON-LD.
-        Provide converter for the ReVerb output into LEDS and LIF format.
+        This wrapper provides a command line interface to call
+        Reverb Extractor in LAPPS Grid I/O specification,
+        that is LAPPS Interchange Format and LAPPS Vocabulary.
+        This version uses Reverb ${reverb.version} internally.
     </description>
     <parent>
         <artifactId>war-parent-pom</artifactId>
@@ -17,7 +18,8 @@
     </parent>
 
     <properties>
-        <lapps.all>2.4.0</lapps.all>
+        <scaffolding.version>1.0.0-SNAPSHOT</scaffolding.version>
+        <reverb.version>1.4.1</reverb.version>
     </properties>
 
     <pluginRepositories>
@@ -28,28 +30,33 @@
     </pluginRepositories>
 
     <dependencies>
+        <!-- Brandeis scaffolding -->
         <dependency>
-            <groupId>org.lappsgrid</groupId>
-            <artifactId>all</artifactId>
-            <version>${lapps.all}</version>
+            <groupId>edu.brandeis.lapps</groupId>
+            <artifactId>app-scaffolding</artifactId>
+            <version>${scaffolding.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>edu.brandeis.lapps</groupId>
+            <artifactId>app-scaffolding</artifactId>
+            <version>${scaffolding.version}</version>
+            <classifier>tests</classifier>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
 
         <!-- Main ReVerb package -->
         <dependency>
             <groupId>edu.washington.cs.knowitall</groupId>
             <artifactId>reverb-core</artifactId>
-            <version>1.4.1</version>
+            <version>${reverb.version}</version>
         </dependency>
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>2.11.0</version>
-        </dependency>
-
     </dependencies>
 
     <build>
-        <finalName>reverb-web-service#${project.version}</finalName>
+
+        <finalName>${project.artifactId}#${project.version}</finalName>
 
         <plugins>
             <plugin>
@@ -57,38 +64,36 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass/>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>edu.brandeis.lapps.reverb.Cli</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal> </goals>
+                    </execution>
+                </executions>
             </plugin>
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>src/main/resources/metadata</directory>
-                        </fileset>
-                    </filesets>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>edu.brandeis.lapps.reverb.Cli</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
 
@@ -101,24 +106,18 @@
                     <argLine>-XX:+UseConcMarkSweepGC</argLine>
                 </configuration>
             </plugin>
-
-            <!-- will generate Version class at project root, which is used in test -->
             <plugin>
-                <groupId>org.anc.maven.plugins</groupId>
-                <artifactId>anc-maven-plugin</artifactId>
-                <version>1.0.7</version>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
                 <executions>
                     <execution>
-                        <id>version-class</id>
-                        <phase>generate-sources</phase>
+                        <id>re-process-resources</id>
+                        <phase>process-classes</phase>
                         <goals>
-                            <goal>version-class</goal>
+                            <goal>resources</goal>
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <package>edu.brandeis.lapps.reverb</package>
-                </configuration>
             </plugin>
         </plugins>
 
@@ -128,15 +127,15 @@
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
                 <includes>
-                    <include>**/version.properties</include>
+                    <include>version.properties</include>
                 </includes>
             </resource>
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
-                <excludes>
-                    <exclude>**/version.properties</exclude>
-                </excludes>
+                <includes>
+                    <include>**</include>
+                </includes>
             </resource>
         </resources>
 

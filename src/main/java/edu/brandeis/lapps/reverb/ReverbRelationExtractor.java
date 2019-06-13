@@ -1,6 +1,7 @@
 package edu.brandeis.lapps.reverb;
 
 
+import edu.brandeis.lapps.BrandeisService;
 import edu.washington.cs.knowitall.commonlib.Range;
 import edu.washington.cs.knowitall.extractor.ReVerbExtractor;
 import edu.washington.cs.knowitall.extractor.SentenceExtractor;
@@ -9,7 +10,6 @@ import edu.washington.cs.knowitall.nlp.ChunkedSentenceReader;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedBinaryExtraction;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedExtraction;
 import edu.washington.cs.knowitall.util.DefaultObjects;
-import org.lappsgrid.api.WebService;
 import org.lappsgrid.metadata.IOSpecification;
 import org.lappsgrid.metadata.ServiceMetadata;
 import org.lappsgrid.serialization.Data;
@@ -34,12 +34,9 @@ import static org.lappsgrid.discriminator.Discriminators.Uri;
  *
  */
 
-public class ReverbRelationExtractor implements WebService {
-
-    public static final String LIF_SCHEMA = "http://vocab.lappsgrid.org/schema/container-schema-1.0.0.json";
+public class ReverbRelationExtractor extends BrandeisService {
 
     private static final Logger log = LoggerFactory.getLogger(ReverbRelationExtractor.class);
-    private String metadataString;
 
     /**
      * Default constructor.
@@ -48,7 +45,6 @@ public class ReverbRelationExtractor implements WebService {
      */
     public ReverbRelationExtractor() {
         try {
-            metadataString = loadMetadata();
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -81,76 +77,24 @@ public class ReverbRelationExtractor implements WebService {
     }
 
     @Override
-    /**
-     * This is default execute: takes a json string, wrap it as a LIF,
-     * run real execute() with the LIF container
-     */
-    public String execute(String input) {
-
-        if (input == null) {
-            log.error("Input is null");
-            return errorLEDS("Input is null");
-        }
-        Data leds;
-        try {
-            leds = Serializer.parse(input, Data.class);
-        } catch (Exception e) {
-            // Serializer#parse will throw a Unchecked groovy exception
-            // if the input is not a well-formed json
-            leds = new Data();
-            leds.setDiscriminator(Uri.TEXT);
-            leds.setPayload(input);
-        }
-
-        final String discriminator = leds.getDiscriminator();
-        Container lif;
-
-        switch (discriminator) {
-            case Uri.ERROR:
-                log.info("Input contains ERROR");
-                return input;
-            case Uri.JSON_LD:
-            case Uri.LIF:
-                log.info("Input contains LIF");
-                lif = new Container((Map) leds.getPayload());
-                break;
-            case Uri.TEXT:
-                log.info("Input contains TEXT");
-                lif = new Container();
-                // TODO: 5/9/18  fix url when it settles in
-//                lif.setSchema(LIF_SCHEMA);
-                lif.setText((String) leds.getPayload());
-                lif.setLanguage("en");
-                break;
-            default:
-                String unsupported = String.format(
-                        "Unsupported discriminator type: %s", discriminator);
-                log.error(unsupported);
-                return errorLEDS(unsupported);
-        }
-
-        try {
-            return execute(lif);
-        } catch (Throwable th) {
-            th.printStackTrace();
-            log.error("Error processing input", th.toString());
-            return errorLEDS(String.format(
-                    "Error processing input: %s", th.toString()));
-        }
-    }
-
-    private String execute(Container lif) throws Exception {
+    protected String processPayload(Container lif) {
+//    private String execute(Container lif) throws Exception {
 
         String inputText = lif.getText();
         if (inputText.length() > 0) {
             log.info("Loading sentence splitter && chunker");
-            String[] sentences = DefaultObjects.getDefaultSentenceDetector().sentDetect(inputText);
+            String[] sentences = new String[0];
+            try {
+                sentences = DefaultObjects.getDefaultSentenceDetector().sentDetect(inputText);
+            } catch (IOException e) {
+                errorLEDS("Couldn't find OpenNLP models to proceed.");
+            }
             log.info("Done!");
 
             log.info("Loading relation extractor");
             log.info("Done!");
 
-            View view = lif.newView("v00" + (lif.getViews().size() + 1));
+            View view = lif.newView();
 
             String serviceName = this.getClass().getName();
             view.addContains(Uri.TOKEN, String.format("%s:%s", serviceName, getVersion()),
@@ -163,13 +107,23 @@ public class ReverbRelationExtractor implements WebService {
                 // We did sent-split first, using the same library. So we believe this "sentence" string only contains one sentence.
 
                 // Use this default constructor, and add no "filter" that removes, for example bracketed substring (BracketsRemover).
-                SentenceExtractor extractor = new SentenceExtractor();
+                SentenceExtractor extractor = null;
+                try {
+                    extractor = new SentenceExtractor();
+                } catch (IOException e) {
+                    errorLEDS("Couldn't find OpenNLP models to proceed.");
+                }
 //                extractor.addMapper(new BracketsRemover());
 //                extractor.addMapper(new SentenceEndFilter());
 //                extractor.addMapper(new SentenceStartFilter());
                 // And purge new line characters. "extractor" would ignore substring after the first newline otherwise
                 String linepurged = sentence.replace("\n", " ");
-                ChunkedSentenceReader reader = new ChunkedSentenceReader(new StringReader(linepurged), extractor);
+                ChunkedSentenceReader reader = null;
+                try {
+                    reader = new ChunkedSentenceReader(new StringReader(linepurged), extractor);
+                } catch (IOException e) {
+                    errorLEDS("Couldn't find OpenNLP models to proceed.");
+                }
 
                 Iterator<ChunkedSentence> chunkedSentenceIterator = reader.getSentences().iterator();
                 if (!chunkedSentenceIterator.hasNext()) {
@@ -230,8 +184,7 @@ public class ReverbRelationExtractor implements WebService {
         int lastTokenIdx = markable.getRange().getEnd() - 1;
         int charOffsetStart = tokenSpans.get(firstTokenIdx)[0];
         int charOffsetEnd = tokenSpans.get(lastTokenIdx)[1];
-        Annotation markableAnnotation = view.newAnnotation(markableId, Uri.MARKABLE, charOffsetStart, charOffsetEnd);
-        return markableAnnotation;
+        return view.newAnnotation(markableId, Uri.MARKABLE, charOffsetStart, charOffsetEnd);
     }
 
     /**
@@ -252,24 +205,20 @@ public class ReverbRelationExtractor implements WebService {
         return tokenSpans;
     }
 
+    @Override
     /**
      * Load metadata from compiler generated json files.
      * @throws IOException when metadata json file was not found.
      */
-    public String loadMetadata() throws IOException {
+    public ServiceMetadata loadMetadata() {
 
-
-        ServiceMetadata metadata = new ServiceMetadata();
-        // TODO: 4/22/18 fix url when it settles in
-        metadata.setSchema("http://vocab.lappsgrid.org/schema/metadata-schema-1.1.0.json");
-        metadata.setVendor("http://www.cs.brandeis.edu/");
-        metadata.setLicense(Uri.APACHE2);
+        ServiceMetadata metadata = setDefaultMetadata();
+        metadata.setLicense("http://reverb.cs.washington.edu/LICENSE.txt");
+        metadata.setLicenseDesc("This service provides an interface to a Reverb Relation Extraction tool, which is developed at UW and is originally licensed under Reverb Software License. For more information, please visit `the official CoreNLP website <http://reverb.cs.washington.edu/LICENSE.txt>`_. ");
         // TODO: 5/15/2018 write better description
         metadata.setDescription("ReVerb Relation Extractor");
         // TODO: 5/15/2018 find full string for "any"
         metadata.setAllow("any");
-        metadata.setVersion(this.getVersion());
-        metadata.setName(this.getClass().getName());
 
         IOSpecification required = new IOSpecification();
         required.addLanguage("en");
@@ -285,12 +234,7 @@ public class ReverbRelationExtractor implements WebService {
         produces.addAnnotations(Uri.TOKEN, Uri.GENERIC_RELATION, Uri.MARKABLE);
         metadata.setProduces(produces);
 
-        return new Data<>(Uri.META, metadata).asJson();
-    }
-
-    @Override
-    public String getMetadata() {
-        return this.metadataString;
+        return metadata;
     }
 
     /* ================= some helpers ================== */
