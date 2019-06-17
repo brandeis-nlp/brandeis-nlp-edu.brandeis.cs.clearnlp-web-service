@@ -1,144 +1,104 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>reverb-cli</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
-    <name>Brandeis LAPPS Grid application Wraps ReVerb relation extractor</name>
-    <description>
-        This wrapper provides a command line interface to call
-        Reverb Extractor in LAPPS Grid I/O specification,
-        that is LAPPS Interchange Format and LAPPS Vocabulary.
-        This version uses Reverb ${reverb.version} internally.
-    </description>
     <parent>
         <groupId>edu.brandeis.lapps</groupId>
         <artifactId>parent-pom</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>reverb</artifactId>
+    <packaging>pom</packaging>
+    <version>1.1.0-SNAPSHOT</version>
+    <name>Brandeis LAPPS Grid wrapper for ReVerb relation extractor</name>
+    <description>
+        This project is to build ReVerb wrappers based on LAPPS Grid I/O specification,
+        namely using LAPPS Interchange Format and LAPPS Vocabulary.
+        Two wrappers are available: a simple commandline interface and lapps webservice.
+        By default (mvn package), the webservice module is built into a war artifact.
+        To build the CLI application, use "cli" profile (mvn pacakge -Pcli).
+        This version uses ReVerb ${reverb.version} internally.
+    </description>
+
+    <developers>
+        <developer>
+            <id>keighrim</id>
+            <name>Keigh Rim</name>
+            <email>krim@brandeis.edu</email>
+            <organization>Lab for Linguistics and Computation, Brandeis University</organization>
+            <organizationUrl>https://www.cs.brandeis.edu/~llc/</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/lappsgrid-services/brandeis-reverb-service.git</connection>
+        <developerConnection>scm:git:git@github.com:lappsgrid-services/brandeis-reverb-service.git</developerConnection>
+        <url>https://github.com/lappsgrid-services/brandeis-reverb-service</url>
+    </scm>
+
+    <issueManagement>
+        <url>https://github.com/lappsgrid-services/brandeis-reverb-service/issues</url>
+        <system>GitHub</system>
+    </issueManagement>
+
+    <repositories>
+        <repository>
+            <id>brandeis-llc-nexus</id>
+            <url>http://morbius.cs-i.brandeis.edu:8081/repository/maven-public/</url>
+        </repository>
+    </repositories>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <modules>
+        <module>reverb-base</module>
+    </modules>
 
     <properties>
-        <scaffolding.version>1.0.0-SNAPSHOT</scaffolding.version>
         <reverb.version>1.4.1</reverb.version>
     </properties>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>the Maven central repository</id>
-            <url>http://repo.maven.apache.org/maven2/</url>
-        </pluginRepository>
-    </pluginRepositories>
-
-    <dependencies>
-        <!-- Brandeis scaffolding -->
-        <dependency>
-            <groupId>edu.brandeis.lapps</groupId>
-            <artifactId>app-scaffolding</artifactId>
-            <version>${scaffolding.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>edu.brandeis.lapps</groupId>
-            <artifactId>app-scaffolding</artifactId>
-            <version>${scaffolding.version}</version>
-            <classifier>tests</classifier>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Main ReVerb package -->
-        <dependency>
-            <groupId>edu.washington.cs.knowitall</groupId>
-            <artifactId>reverb-core</artifactId>
-            <version>${reverb.version}</version>
-        </dependency>
-    </dependencies>
+    <profiles>
+        <profile>
+            <id>cli</id>
+            <modules>
+                <module>reverb-cli</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>default</id>
+            <modules>
+                <module>reverb-webservice</module>
+            </modules>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+    </profiles>
 
     <build>
-
-        <finalName>${project.artifactId}#${project.version}</finalName>
-
         <plugins>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>edu.brandeis.lapps.reverb.Cli</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>${project.artifactId}*.war</include>
+                                <include>${project.artifactId}*.jar</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal> </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>edu.brandeis.lapps.reverb.Cli</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.18.1</version>
-                <configuration>
-                    <argLine>-Xms512m -Xmx2048m</argLine>
-                    <argLine>-XX:+UseConcMarkSweepGC</argLine>
-                </configuration>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.0.2</version>
-                <executions>
-                    <execution>
-                        <id>re-process-resources</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>resources</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
-
-        <!-- copy version as resource -->
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>version.properties</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <includes>
-                    <include>**</include>
-                </includes>
-            </resource>
-        </resources>
-
     </build>
 
 </project>
