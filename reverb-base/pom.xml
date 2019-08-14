@@ -12,7 +12,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <scaffolding.version>1.0.0-SNAPSHOT</scaffolding.version>
+        <scaffolding.version>1.0.1</scaffolding.version>
     </properties>
 
     <dependencies>

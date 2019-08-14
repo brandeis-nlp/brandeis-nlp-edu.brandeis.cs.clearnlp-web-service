@@ -10,6 +10,7 @@ import edu.washington.cs.knowitall.nlp.ChunkedSentenceReader;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedBinaryExtraction;
 import edu.washington.cs.knowitall.nlp.extraction.ChunkedExtraction;
 import edu.washington.cs.knowitall.util.DefaultObjects;
+import org.lappsgrid.discriminator.Discriminators;
 import org.lappsgrid.metadata.IOSpecification;
 import org.lappsgrid.metadata.ServiceMetadata;
 import org.lappsgrid.serialization.Data;
@@ -215,10 +216,8 @@ public class ReverbRelationExtractor extends BrandeisService {
         ServiceMetadata metadata = setDefaultMetadata();
         metadata.setLicense("http://reverb.cs.washington.edu/LICENSE.txt");
         metadata.setLicenseDesc("This service provides an interface to a Reverb Relation Extraction tool, which is developed at UW and is originally licensed under Reverb Software License. For more information, please visit `the official CoreNLP website <http://reverb.cs.washington.edu/LICENSE.txt>`_. ");
-        // TODO: 5/15/2018 write better description
-        metadata.setDescription("ReVerb Relation Extractor");
-        // TODO: 5/15/2018 find full string for "any"
-        metadata.setAllow("any");
+        metadata.setDescription("This service is a wrapper around ReVerb Relation Extractor " + getWrappeeVersion() + " that extracts OpenIE style triples from input texts.");
+        metadata.setAllow(Discriminators.Uri.ALL);
 
         IOSpecification required = new IOSpecification();
         required.addLanguage("en");
