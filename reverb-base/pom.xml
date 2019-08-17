@@ -1,0 +1,77 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>edu.brandeis.lapps</groupId>
+        <artifactId>reverb</artifactId>
+        <version>1.1.0-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>reverb-base</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <scaffolding.version>1.0.1</scaffolding.version>
+    </properties>
+
+    <dependencies>
+        <!-- Brandeis scaffolding -->
+        <dependency>
+            <groupId>edu.brandeis.lapps</groupId>
+            <artifactId>app-scaffolding</artifactId>
+            <version>${scaffolding.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>edu.brandeis.lapps</groupId>
+            <artifactId>app-scaffolding</artifactId>
+            <version>${scaffolding.version}</version>
+            <classifier>tests</classifier>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Main ReVerb package -->
+        <dependency>
+            <groupId>edu.washington.cs.knowitall</groupId>
+            <artifactId>reverb-core</artifactId>
+            <version>${reverb.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <argLine>-Xms512m -Xmx2048m</argLine>
+                    <argLine>-XX:+UseConcMarkSweepGC</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <!-- copy version as resource -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>version.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**</include>
+                </includes>
+            </resource>
+        </resources>
+
+    </build>
+
+</project>
