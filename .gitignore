@@ -46,7 +46,8 @@ gen
 # java
 *.class
 .mtj.tmp/ # Mobile Tools for Java (J2ME)
-target/ # Package Files #
+target/
+**/target/ # Package Files #
 *.jar
 *.war
 *.ear
